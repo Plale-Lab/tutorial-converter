@@ -44,7 +44,8 @@ def node_clean(state: AgentState):
     engine = LLMEngine()
     result = engine.generate_text(
         prompt=f"Clean this content:\n\n{state['raw_content']}",
-        system_prompt=CLEAN_PROMPT
+        system_prompt=CLEAN_PROMPT,
+        task_type="clean"  # Uses local LLM to save costs
     )
     return {"cleaned_content": result, "iteration_count": 0}
 
@@ -55,7 +56,8 @@ def node_glossary(state: AgentState):
         response = engine.generate_structured(
             prompt=f"Extract terms from:\n {state['cleaned_content'][:4000]}", # Truncate for safety
             response_model=GlossaryResponse,
-            system_prompt=GLOSSARY_EXTRACT_PROMPT
+            system_prompt=GLOSSARY_EXTRACT_PROMPT,
+            task_type="glossary"  # Uses local LLM to save costs
         )
         
         # Store in VectorDB
@@ -147,50 +149,101 @@ def node_rewrite(state: AgentState):
     if state.get('critique_feedback'):
         formatted_prompt += f"\n\nAddress this feedback: {state['critique_feedback']}"
 
-    # Map-Reduce for long content (> 15000 chars approx 4000 tokens)
+    # Map-Reduce for long content (> 6000 chars - lower threshold for better quality)
     content_len = len(state['cleaned_content'])
-    if content_len > 15000:
-        print(f"--- Long Content detected ({content_len} chars). Using Map-Reduce. ---")
-        # Simple splitting by double newline to preserve paragraphs relative integrity
-        chunks = state['cleaned_content'].split("\n\n")
-        # Group chunks to ~4000 chars
+    CHUNK_THRESHOLD = 6000  # ~1500 tokens, allows thorough processing
+    CHUNK_SIZE = 3000  # Target size per chunk
+    
+    if content_len > CHUNK_THRESHOLD:
+        print(f"--- Long Content detected ({content_len} chars). Using Semantic Chunking. ---")
+        
+        # Semantic chunking: Split by headings first, then paragraphs
+        content = state['cleaned_content']
+        
+        # Try to split by markdown headings (## or ###) for better structure preservation
+        heading_pattern = r'\n(?=#{1,3}\s)'
+        sections = re.split(heading_pattern, content)
+        
+        # If no headings found, fall back to paragraph splitting
+        if len(sections) <= 1:
+            sections = content.split("\n\n")
+        
+        # Group sections into chunks respecting size limits
         grouped_chunks = []
         current_chunk = ""
-        for chunk in chunks:
-            if len(current_chunk) + len(chunk) < 4000:
-                current_chunk += "\n\n" + chunk
+        current_heading = ""  # Track section context
+        
+        for section in sections:
+            section = section.strip()
+            if not section:
+                continue
+                
+            # Detect if this is a heading
+            if section.startswith('#'):
+                lines = section.split('\n', 1)
+                current_heading = lines[0] if lines else ""
+                section_content = lines[1] if len(lines) > 1 else ""
             else:
-                grouped_chunks.append(current_chunk)
-                current_chunk = chunk
-        if current_chunk:
-            grouped_chunks.append(current_chunk)
+                section_content = section
             
+            # Check if adding this section exceeds chunk size
+            if len(current_chunk) + len(section) < CHUNK_SIZE:
+                current_chunk += "\n\n" + section
+            else:
+                if current_chunk.strip():
+                    grouped_chunks.append(current_chunk.strip())
+                # Start new chunk with heading context
+                current_chunk = section
+        
+        if current_chunk.strip():
+            grouped_chunks.append(current_chunk.strip())
+        
+        print(f"--- Split into {len(grouped_chunks)} semantic chunks ---")
+        
+        # Process each chunk with context carryover
         rewritten_parts = []
+        previous_summary = ""
+        
         for i, section in enumerate(grouped_chunks):
-            print(f"Processing part {i+1}/{len(grouped_chunks)}")
-            # For parts, we might want to inject context or summary of previous part, but keeping it simple/parallel for now
-            part_prompt = formatted_prompt.replace(state['cleaned_content'], section) 
-            # Note: The original prompt template has {content} placeholder. 
-            # If we formatted already, we appended context. 
-            # A cleaner way is to re-format for each chunk.
+            print(f"Processing chunk {i+1}/{len(grouped_chunks)} ({len(section)} chars)")
             
-            # Reconstruct prompt for this chunk
+            # Build chunk-specific prompt with full context
             chunk_prompt = prompt_template.format(content=section)
+            
+            # Add context carryover from previous chunk
+            if previous_summary and i > 0:
+                chunk_prompt += f"\n\n**Context from previous section:**\n{previous_summary}"
+            
+            # Add all additional context
             if glossary_context:
                 chunk_prompt += f"\n\n{glossary_context}"
+            if rag_context:
+                chunk_prompt += f"\n\n{rag_context}"
+            if state.get('custom_prompt'):
+                chunk_prompt += f"\n\n**Additional Instructions:**\n{state['custom_prompt']}"
+            if output_options:
+                # Only add output options to last chunk
+                if i == len(grouped_chunks) - 1:
+                    chunk_prompt += options_instructions
             
             part_result = engine.generate_text(
                 prompt=chunk_prompt,
-                system_prompt="You are a helpful writer."
+                system_prompt="You are a helpful writer maintaining consistency across document sections.",
+                task_type="rewrite"  # Quality-critical: uses remote if available
             )
             rewritten_parts.append(part_result)
+            
+            # Generate brief summary for context carryover (last 200 chars as simple approach)
+            previous_summary = part_result[-300:] if len(part_result) > 300 else part_result
         
-        result = "\n\n".join(rewritten_parts)
+        result = "\n\n---\n\n".join(rewritten_parts)  # Clear section breaks
+        
     else: 
-        # Standard Single Pass
+        # Standard Single Pass for shorter content
         result = engine.generate_text(
             prompt=formatted_prompt,
-            system_prompt="You are a helpful writer."
+            system_prompt="You are a helpful writer.",
+            task_type="rewrite"  # Quality-critical: uses remote if available
         )
 
     return {"rewritten_content": result, "iteration_count": state["iteration_count"] + 1}
@@ -209,7 +262,8 @@ def node_critic(state: AgentState):
     response = engine.generate_structured(
         prompt=prompt,
         response_model=CriticResponse,
-        system_prompt=CRITIC_PROMPT
+        system_prompt=CRITIC_PROMPT,
+        task_type="critic"  # Quality-critical: uses remote if available
     )
     
     return {

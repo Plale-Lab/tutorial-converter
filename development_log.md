@@ -100,3 +100,20 @@ Implemented knowledge base indexing to improve converter output quality.
 ### Workflow Integration
 - `node_rewrite` in `workflow.py` now queries RAG knowledge base
 - Up to 3 relevant chunks injected as "Relevant Background Knowledge"
+
+## Phase 11: LLM Pipeline Optimization (Feb 6)
+Optimized the LLM pipeline for better accuracy and reduced remote API costs.
+
+### Semantic Chunking (Accuracy)
+- **Lower threshold**: 15K → 6K chars for more thorough processing
+- **Heading-aware splitting**: Preserves document structure
+- **Context carryover**: Passes summary between chunks for coherence
+
+### Hybrid LLM Strategy (Cost Reduction)
+- **Task-based routing**: Simple tasks (clean, glossary) use local LLM
+- **Quality-critical tasks**: (rewrite, critic) use remote LLM when configured
+- **Auto-detection**: Checks if Ollama is available before routing
+
+### Files Modified
+- `core/engine.py` - Added `get_model_for_task()` method
+- `agents/workflow.py` - Improved chunking, added task_type to all LLM calls

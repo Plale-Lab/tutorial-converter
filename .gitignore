@@ -37,3 +37,6 @@ chroma_db/
 output.pdf
 static/*.png
 !static/.gitkeep
+
+# misc
+UI/
