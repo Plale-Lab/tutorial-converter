@@ -1,0 +1,39 @@
+# User Request
+dev plan.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+
+# Distribution / Build
+build/
+dist/
+*.egg-info/
+*.spec
+
+# Jupyter / Notebooks
+.ipynb_checkpoints
+
+# Logs
+*.log
+
+# Project specific
+chroma_db/
+output.pdf
+static/*.png
+!static/.gitkeep
