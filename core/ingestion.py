@@ -43,19 +43,83 @@ class IngestionService:
         nodes = parser.get_nodes_from_documents([doc])
         return [node.text for node in nodes]
 
-    def _parse_with_llama(self, url: str) -> str:
-        print(f"Parsing with LlamaParse: {url}")
-        parser = LlamaParse(
-            api_key=self.llama_cloud_api_key,
-            result_type="markdown",
-            verbose=True
-        )
-        if os.path.exists(url):
-            documents = parser.load_data(url)
-        else:
-             raise NotImplementedError("Direct URL parsing with LlamaParse requires integration with a web loader. Use Firecrawl for web pages.")
-
-        return "\n\n".join([doc.text for doc in documents])
+    def _parse_with_llama(self, filepath: str) -> str:
+        """Parse local PDF/document file with LlamaParse or fallback parsers."""
+        print(f"Parsing local file: {filepath}")
+        
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"File not found: {filepath}")
+        
+        # Try LlamaParse first (if API key available)
+        if self.llama_cloud_api_key:
+            try:
+                print("Attempting LlamaParse...")
+                parser = LlamaParse(
+                    api_key=self.llama_cloud_api_key,
+                    result_type="markdown",
+                    verbose=True
+                )
+                documents = parser.load_data(filepath)
+                content = "\n\n".join([doc.text for doc in documents])
+                if content.strip():
+                    return content
+                print("LlamaParse returned empty content, trying fallbacks...")
+            except Exception as e:
+                print(f"LlamaParse failed: {e}, trying fallbacks...")
+        
+        # Fallback 1: PyMuPDF (fitz) - good for general PDFs
+        try:
+            import fitz  # PyMuPDF
+            print("Attempting PyMuPDF (fitz)...")
+            doc = fitz.open(filepath)
+            text_parts = []
+            for page in doc:
+                text_parts.append(page.get_text())
+            doc.close()
+            content = "\n\n".join(text_parts)
+            if content.strip():
+                print(f"PyMuPDF extracted {len(content)} chars")
+                return content
+        except ImportError:
+            print("PyMuPDF not installed, trying other fallbacks...")
+        except Exception as e:
+            print(f"PyMuPDF failed: {e}")
+        
+        # Fallback 2: pypdf
+        try:
+            from pypdf import PdfReader
+            print("Attempting pypdf...")
+            reader = PdfReader(filepath)
+            text_parts = []
+            for page in reader.pages:
+                text_parts.append(page.extract_text() or "")
+            content = "\n\n".join(text_parts)
+            if content.strip():
+                print(f"pypdf extracted {len(content)} chars")
+                return content
+        except ImportError:
+            print("pypdf not installed, trying other fallbacks...")
+        except Exception as e:
+            print(f"pypdf failed: {e}")
+        
+        # Fallback 3: pdfplumber
+        try:
+            import pdfplumber
+            print("Attempting pdfplumber...")
+            text_parts = []
+            with pdfplumber.open(filepath) as pdf:
+                for page in pdf.pages:
+                    text_parts.append(page.extract_text() or "")
+            content = "\n\n".join(text_parts)
+            if content.strip():
+                print(f"pdfplumber extracted {len(content)} chars")
+                return content
+        except ImportError:
+            print("pdfplumber not installed")
+        except Exception as e:
+            print(f"pdfplumber failed: {e}")
+        
+        raise ValueError(f"Could not extract text from PDF. Install PyMuPDF: pip install pymupdf")
 
     def _parse_with_firecrawl(self, url: str) -> str:
         print(f"Parsing with Firecrawl: {url}")

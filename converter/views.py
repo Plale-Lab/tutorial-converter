@@ -64,9 +64,15 @@ def convert(request):
                 if uploaded_file.name.endswith('.txt'):
                     with open(tmp_path, 'r', encoding='utf-8') as f:
                         raw_content = f.read()
+                    logger.info(f"TXT file read: {len(raw_content)} chars")
                 elif uploaded_file.name.endswith('.pdf'):
-                    # Use LlamaParse for PDF
-                    raw_content = ingestion.parse_url(tmp_path)  # parse_url handles local files too
+                    # Use ingestion service for PDF (has multiple fallback parsers)
+                    logger.info(f"Parsing PDF from temp path: {tmp_path}")
+                    raw_content = ingestion.parse_url(tmp_path)
+                    logger.info(f"PDF extracted: {len(raw_content) if raw_content else 0} chars")
+                    if not raw_content or not raw_content.strip():
+                        logger.error("PDF extraction returned empty content!")
+                        return JsonResponse({'success': False, 'error': 'Could not extract text from PDF. The PDF may be image-only or corrupted.'}, status=400)
                 else:
                     raw_content = "Unsupported file type."
                     
@@ -76,7 +82,7 @@ def convert(request):
                 except:
                     pass
                     
-                logger.info("File ingestion complete.")
+                logger.info(f"File ingestion complete. Content length: {len(raw_content)}")
                 
             elif url == "test":
                 logger.info("Using TEST mode with dummy content.")
