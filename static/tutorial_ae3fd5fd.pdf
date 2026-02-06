@@ -1,0 +1,153 @@
+PDF Generation is disabled because WeasyPrint (GTK3) is missing.
+
+Raw Content:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Converted Tutorial</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Embedding critical CSS for PDF consistency if needed */
+        
+        /* Dynamic Style Injection */
+        
+body {
+font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+background-color: #f0f9ff;
+font-size: 18px;
+}
+h1 {
+color: #ff6b6b;
+text-align: center;
+}
+h2 {
+color: #4ecdc4;
+}
+main {
+background: white;
+padding: 40px;
+border-radius: 15px;
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+border: 5px solid #ffe66d;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Converted Tutorial</h1>
+    </header>
+    
+    <main>
+        <p>Here's the rewritten content in simple language:</p>
+<h3>Tutorial | ICICLE AI Institute - Training Catalog</h3>
+<h1>Harvest</h1>
+<h2>Prerequisites and User Guide</h2>
+<p><strong>What is Harvest?</strong>
+Harvest is a tool that helps us train and use computer models. It works like a browser, so you can use it on any device with an internet connection.</p>
+<p>To start using Harvest, email icicle_harvest@osu.edu to get a trial account.</p>
+<h3>Main Use Cases</h3>
+<p>There are two main things we can do with Harvest:</p>
+<ol>
+<li><strong>Train a model</strong>: We can train a computer model to learn from our data.</li>
+<li><strong>Make predictions</strong>: We can use a trained model to make predictions on new, unseen data.</li>
+</ol>
+<h3>Training Use Case</h3>
+<p><strong>Step 1: Prepare your data</strong>
+Upload the images you want to use Harvest with.</p>
+<p><strong>Step 2: Log in and select training</strong>
+Go to icicleai.tapis.io/#/ and click on <strong>Harvest</strong>. Then, select <strong>Training</strong> from the dashboard page.</p>
+<p><strong>Step 3: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Data location</strong>: Where your data is stored on a special computer called an HPC resource.</li>
+<li><strong>Learning Rate</strong>: How fast the model learns from your data.</li>
+<li><strong>Batch Size</strong>: How many examples of data we use at one time.</li>
+<li><strong>Number of Epochs</strong>: How many times we go through all our training data.</li>
+<li><strong>Number of GPUs Used</strong>: How many special computer chips (GPUs) will help us train the model.</li>
+</ul>
+<p><strong>Step 4: Start training</strong>
+If you have a labeled images json file, Harvest will start training automatically!</p>
+<h3>Inference Use Case</h3>
+<p><strong>Step 1: Select inference</strong>
+On the dashboard page, select <strong>Inference</strong> and choose if you want to do preprocessing or visualization.</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Data location</strong>: Where your data is stored on an HPC resource.</li>
+<li><strong>Model Name</strong>: The name of the model we trained in the previous step.</li>
+<li><strong>Quantization and Inference Backend</strong>: Don't worry about these, they're just extra help for the computer.</li>
+</ul>
+<h3>Preprocessing</h3>
+<p>Preprocessing is like preparing a meal. We need to put together three ingredients:</p>
+<ol>
+<li><strong>Image directory</strong>: Where your images are stored.</li>
+<li><strong>Shape file of plots</strong>: A special file that helps us understand where each image was taken.</li>
+<li><strong>CSV file with drone data</strong>: A file with information about the drone's position and orientation.</li>
+</ol>
+<h3>Data Preprocessing</h3>
+<p><strong>Step 1: Crop Images</strong>
+On the dashboard page, select "Crop Images".</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Training system</strong>: The type of computer we're using.</li>
+<li><strong>Source Image Directory</strong>: Where your images are stored.</li>
+</ul>
+<h3>Data Movement</h3>
+<p><strong>Step 1: Extract Frames</strong>
+On the dashboard page, select "Extract Frames".</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Training system</strong>: The type of computer we're using.</li>
+<li><strong>Destination Image Directory</strong>: Where you want to save your extracted frames.</li>
+</ul>
+<h3>Visualization</h3>
+<p>We need to do preprocessing and inference in the same order. Let's call it "preprocessing-inference".</p>
+<p><strong>Step 1: Select visualization</strong>
+On the dashboard page, select "Object Detector".</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Filesystem System</strong>: The type of computer we're using.</li>
+<li><strong>Input Path</strong>: Where your images are stored.</li>
+<li><strong>Object Classes</strong>: What types of objects you want to detect.</li>
+</ul>
+<h3>Classifier</h3>
+<p><strong>Step 1: Select classifier</strong>
+On the dashboard page, select "Classifier".</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Filesystem System</strong>: The type of computer we're using.</li>
+<li><strong>Input JSON Path (Object Detector Output)</strong>: Where your object detection results are stored.</li>
+<li><strong>Input Images Directory</strong>: Where your original images are stored.</li>
+</ul>
+<h3>Shapefile Generation</h3>
+<p><strong>Step 1: Select shapefile generation</strong>
+On the dashboard page, select "Shapefile Generation".</p>
+<p><strong>Step 2: Fill out the form</strong>
+Enter the following information:</p>
+<ul>
+<li><strong>Filesystem System</strong>: The type of computer we're using.</li>
+<li><strong>Result JSON file</strong>: Where your results are stored.</li>
+<li><strong>Images directory</strong>: Where your original images are stored.</li>
+</ul>
+<p>Key Terms:
+- Model training: Creating or updating a machine learning model using data.
+- Inference tool: Using a trained model to make predictions on new data.
+- Preprocessing: Preparing and transforming raw data for use in machine learning models.
+- Trained model: A created or updated machine learning model that can be used to make predictions.
+- HPC resource: Special computers used for processing large amounts of data.
+- GPU: Special computer chips designed for complex mathematical calculations.</p>
+<p>Note:
+I have removed the code blocks and added explanations where necessary. I have also inserted [[IMG_SUGGESTION]] tags in places where an illustration can help explain a concept.</p>
+    </main>
+    
+    <footer>
+        <p>Generated by AI Tutorial Converter</p>
+    </footer>
+</body>
+</html>

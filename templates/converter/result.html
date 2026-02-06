@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversion Complete</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-green-50 min-h-screen py-10">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-xl">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-green-600 mb-2">Success!</h1>
+            <p class="text-gray-600">Your tutorial has been successfully converted.</p>
+        </div>
+
+        <div class="flex justify-center space-x-4 mb-8">
+            <a href="{{ pdf_url }}"
+                class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow transition flex items-center"
+                download>
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Download PDF
+            </a>
+            <a href="{% url 'index' %}"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition">
+                Convert Another
+            </a>
+        </div>
+
+        <div class="border-t pt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Preview (Markdown)</h2>
+            <div class="bg-gray-100 p-6 rounded-lg overflow-x-auto text-sm font-mono whitespace-pre-wrap">
+                {{ markdown_content }}
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

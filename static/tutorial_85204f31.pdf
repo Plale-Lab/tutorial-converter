@@ -1,0 +1,136 @@
+PDF Generation is disabled because WeasyPrint (GTK3) is missing.
+
+Raw Content:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Converted Tutorial</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Embedding critical CSS for PDF consistency if needed */
+        
+        /* Dynamic Style Injection */
+        
+body {
+font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+background-color: #f0f9ff;
+font-size: 18px;
+}
+h1 {
+color: #ff6b6b;
+text-align: center;
+}
+h2 {
+color: #4ecdc4;
+}
+main {
+background: white;
+padding: 40px;
+border-radius: 15px;
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+border: 5px solid #ffe66d;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Converted Tutorial</h1>
+    </header>
+    
+    <main>
+        <p>Here is a rewritten version of the content in simple terms, suitable for a 5th grader:</p>
+<h3>Harvest Tutorial</h3>
+<h4>Prerequisites</h4>
+<p>To use Harvest, you need an Internet browser and to contact us at <code>icicle_harvest@osu.edu</code> to get a trial account.</p>
+<p>You can find a user guide with learning time estimates here: <img alt="Picture of a user manual" src="static/image_kids_0.png" /></p>
+<h4>Training Use Case</h4>
+<p>On the dashboard page, select "Training" and then "Preprocessing" if you want. <strong>Remember</strong>: Data for training jobs must be in SCRATCH.</p>
+<p>Fill in the required information. Don't worry if some fields are blank – they can stay that way or change to have a different effect.</p>
+<ul>
+<li>Training System: Where your data is stored on a special computer called an HPC Resource.</li>
+<li>Learning Rate: How fast the model learns from your data.</li>
+<li>Batch Size: How many examples of what you're training it on at a time.</li>
+<li>Number of Epochs: How many times the model goes through all your training data.</li>
+<li>Number of GPUs Used: How many special computers help train the model.</li>
+<li>Labeled Images Per Class: If you have lots of pictures with labels, this tells the model how many to use for each type.</li>
+<li>Training Algorithm: What kind of learning method to use (like teaching a kid or letting them learn on their own).</li>
+<li>Base Deep Learning Model: The starting point for our model.</li>
+</ul>
+<p>If you upload a labeled images JSON file, training will start automatically! If not, you'll need to label some images first. <strong>Note</strong>: You can find the format of a labeled image JSON here: <code>{“class1”:[images…], “class2”:[images…], …}</code></p>
+<p>The labeler tool asks for class labels and lets you drag and drop pictures into boxes that match those labels. Once done, training starts!</p>
+<h4>Inference Use Case</h4>
+<p>On the dashboard page, select "Inference" and then "Preprocessing/Visualization" if you want.</p>
+<p>Fill in the required information. Remember, only models you've trained yourself are available for inference right now.</p>
+<ul>
+<li>Training System: Where your data is stored on an HPC Resource.</li>
+<li>Inference Model Name: The name of the model created during training that you want to use for this job.</li>
+<li>Quantization and Inference Backend: Don't worry about these unless you're a super expert – they help with how the model works.</li>
+</ul>
+<h4>Preprocessing</h4>
+<p>Preprocessing has three inputs:</p>
+<ul>
+<li>Image directory</li>
+<li>Shape file (a special kind of map)</li>
+<li>CSV file (with drone data)</li>
+</ul>
+<p><strong>Crop Images</strong>: On the dashboard page, select "Crop Images." <strong>Remember</strong>: Data for training jobs must be in SCRATCH.</p>
+<p>Fill in all required fields. If any are blank, the job won't start!</p>
+<ul>
+<li>Training system: Where your data is stored on an HPC Resource.</li>
+<li>Source Image Directory: Where the images to be cropped are stored.</li>
+<li>Destination Image Directory: Where the cropped images will go.</li>
+</ul>
+<p><strong>Extract frames</strong>: On the dashboard page, select "Extract Frames."</p>
+<p>Fill in all required fields. If any are blank, the job won't start!</p>
+<ul>
+<li>Training system: Where your data is stored on an HPC Resource.</li>
+<li>Destination Image Directory: Where the extracted frames will be saved.</li>
+</ul>
+<h4>Visualization</h4>
+<p>Requires running a Preprocessing step and an Inference step together.</p>
+<p><strong>Object Detector</strong>: On the dashboard page, select "Object Detector." <strong>Remember</strong>: Data for training jobs must be in SCRATCH.</p>
+<p>Fill in all required fields. If any are blank, the job won't start!</p>
+<ul>
+<li>Filesystem System: Where your data is stored on an HPC Resource.</li>
+<li>Input Path: Where the images to be analyzed are stored.</li>
+<li>Object Classes: What you want the model to look for (e.g., plants, weeds, crops).</li>
+<li>Confidence Threshold: How sure the model needs to be about its detections.</li>
+</ul>
+<p><strong>Classifier</strong>: On the dashboard page, select "Classifier." <strong>Remember</strong>: Data for training jobs must be in SCRATCH.</p>
+<p>The classifier works in two steps:</p>
+<p>Step 1: Setup</p>
+<p>Fill in the initial configuration:</p>
+<ul>
+<li>Filesystem System: Where your data is stored on an HPC Resource.</li>
+<li>Input JSON Path (Object Detector Output): The path to the JSON file from the object detector module.</li>
+<li>Input Images Directory: The directory containing the source images analyzed by the object detector.</li>
+</ul>
+<p><strong>Shapefile Generation</strong>: On the dashboard page, select "Shapefile Generation" if you want. <strong>Remember</strong>: Data for training jobs must be in SCRATCH.</p>
+<p>Fill in all required fields. If any are blank, the job won't start!</p>
+<ul>
+<li>Filesystem System: Where your data is stored on an HPC Resource.</li>
+<li>Result JSON file: The path to the JSON file containing image information.</li>
+<li>Images directory: The directory with matching image names where the JSON is based.</li>
+</ul>
+<p>Some key terms you should know:</p>
+<ul>
+<li><strong>SaaS</strong>: Software as a Service – like Netflix, but for work!</li>
+<li><strong>HPC Resource</strong>: A supercomputer that can do lots of calculations quickly.</li>
+<li><strong>GPU</strong>: A special computer chip that helps with parallel processing and computation.</li>
+<li><strong>Epochs</strong>: A complete pass through all your training data.</li>
+<li><strong>Batch Size</strong>: The number of examples you train the model on at a time.</li>
+<li><strong>Semi-Supervised Learning</strong>: Combining labeled and unlabeled data for learning.</li>
+<li><strong>Supervised Learning</strong>: Using only fully labeled data to train the model.</li>
+<li><strong>Deep Learning Model</strong>: An underlying architecture used in machine learning.</li>
+<li><strong>JSON</strong>: A lightweight data format (JavaScript Object Notation).</li>
+</ul>
+<p>I hope this rewritten text is more suitable for a 5th grader. I've tried to simplify complex concepts and add analogies where necessary. Please let me know if there's anything else I can do!</p>
+    </main>
+    
+    <footer>
+        <p>Generated by AI Tutorial Converter</p>
+    </footer>
+</body>
+</html>

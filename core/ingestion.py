@@ -2,6 +2,7 @@ import os
 import requests
 from llama_index.core.node_parser import HierarchicalNodeParser, SimpleNodeParser
 from llama_index.core import Document
+from llama_parse import LlamaParse
 
 class IngestionService:
     def __init__(self):
@@ -18,49 +19,42 @@ class IngestionService:
         """
         Parses a URL or PDF and returns structured Markdown.
         """
-        if self.provider == "llama_parse":
-            return self._parse_with_llama(url)
-        elif self.provider == "firecrawl":
-            return self._parse_with_firecrawl(url)
+        # Determine priority: If URL is web-based, prefer Firecrawl.
+        if url.startswith("http"):
+             if self.firecrawl_api_url:
+                 try:
+                    return self._parse_with_firecrawl(url)
+                 except Exception as e:
+                     print(f"Firecrawl failed ({e}). Falling back to direct fetch.")
+                     return self._parse_with_fallback(url)
+             
+             # Fallback if no Firecrawl configured
+             return self._parse_with_fallback(url)
         else:
-            raise ValueError("No valid ingestion provider configured.")
+             # Local file path
+             return self._parse_with_llama(url)
             
     def get_chunks(self, text: str, chunk_size: int = 1024):
         """
         Splits text into hierarchical chunks.
         """
         doc = Document(text=text)
-        # Using SimpleNodeParser for simplicity if Hierarchical is too complex to setup without index structure
-        # parser = HierarchicalNodeParser.from_defaults(chunk_sizes=[2048, 512, 128])
         parser = SimpleNodeParser.from_defaults(chunk_size=chunk_size, chunk_overlap=128)
         nodes = parser.get_nodes_from_documents([doc])
         return [node.text for node in nodes]
 
     def _parse_with_llama(self, url: str) -> str:
         print(f"Parsing with LlamaParse: {url}")
-        # Initialize LlamaParse
         parser = LlamaParse(
             api_key=self.llama_cloud_api_key,
             result_type="markdown",
             verbose=True
         )
-        # Check if local file or URL
-        # LlamaParse loads data via the load_data method which handles files.
-        # For URLs, we might need to download first or use their web parsing if supported.
-        # Assuming URL for now invokes their web-reader or we treat it as file if local path.
-        
-        # Quick check if it looks like a file path that exists
         if os.path.exists(url):
             documents = parser.load_data(url)
         else:
-            # LlamaParse traditionally parses FILES (PDFs). 
-            # For direct URL scraping (HTML), Firecrawl is better.
-            # But let's assume we might feed it a downloaded PDF or generic web loader.
-            # For simplicity, if it's a web URL, LlamaParse might not be the direct tool unless using LlamaIndex's SimpleWebPageReader first.
-            # Let's fallback to rudimentary download or raise.
              raise NotImplementedError("Direct URL parsing with LlamaParse requires integration with a web loader. Use Firecrawl for web pages.")
 
-        # Combine loaded documents
         return "\n\n".join([doc.text for doc in documents])
 
     def _parse_with_firecrawl(self, url: str) -> str:
@@ -72,20 +66,44 @@ class IngestionService:
                 "onlyMainContent": True
             }
         }
+        # Don't catch exception here, let it propagate to parse_url to trigger fallback
+        response = requests.post(f"{self.firecrawl_api_url}/v0/scrape", json=payload, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data and 'data' in data and 'markdown' in data['data']:
+            return data['data']['markdown']
+        else:
+            raise ValueError(f"Firecrawl response missing markdown: {data}")
+
+    def _parse_with_fallback(self, url: str) -> str:
+        """
+        Fallback: Direct simplistic HTML fetch.
+        """
+        print(f"Parsing with Direct Request Fallback: {url}")
         try:
-            response = requests.post(f"{self.firecrawl_api_url}/v0/scrape", json=payload)
-            response.raise_for_status()
-            data = response.json()
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
             
-            if data and 'data' in data and 'markdown' in data['data']:
-                return data['data']['markdown']
-            else:
-                raise ValueError(f"Firecrawl response missing markdown: {data}")
-                
+            # Very basic cleanup without BS4 dependency
+            text = resp.text
+            import re
+            
+            # Remove scripts and styles
+            text = re.sub(r'<script.*?>.*?</script>', '', text, flags=re.DOTALL)
+            text = re.sub(r'<style.*?>.*?</style>', '', text, flags=re.DOTALL)
+            
+            # Simple tag removal
+            clean_text = re.sub(r'<[^>]+>', '\n', text)
+            
+            # Collapse whitespace
+            clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)
+            
+            return clean_text.strip()
+            
         except Exception as e:
-            print(f"Firecrawl error: {e}")
-            # Fallback or re-raise
-            raise e
+            raise ConnectionError(f"Failed to fetch content from {url}. Check internet connection. Error: {e}")
+
 
 # Example usage
 if __name__ == "__main__":

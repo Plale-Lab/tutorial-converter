@@ -22,7 +22,7 @@ class LLMEngine:
     def get_model_name(self) -> str:
         """Returns the default model string based on provider."""
         if self.provider == "local":
-            return "ollama/llama3" # Default local model, can be configured
+            return "ollama/llama3.1:8b" # Updated to match installed model
         else:
             return "gpt-4o" # Default remote model
 
@@ -55,37 +55,30 @@ class LLMEngine:
         """
         model = self.get_model_name()
         
-        # Create client for Instructor
-        # Note: Instructor typically wraps an OpenAI client. 
-        # For LiteLLM, we can use instructor.from_litellm or similar if available, 
-        # or patch the client.
-        
-        # For simplicity in this plan, we will use the patch logic or LiteLLM's `acompletion` 
-        # compatible client if supported by recent instructor versions.
-        # Alternatively, Instructor works best with OpenAI-like API. 
-        # Ollama provides an OpenAI compatible endpoint at /v1.
-        
+        # Initialize instructor client wrapping LiteLLM
+        # Use JSON mode for Ollama compatibility (tool calling doesn't work well)
         if self.provider == "local":
-             base_url = f"{self.ollama_base_url}/v1"
-             api_key = "ollama" # required but unused
+            client = instructor.from_litellm(litellm.completion, mode=instructor.Mode.JSON)
         else:
-             base_url = None # Default OpenAI
-             api_key = self.remote_api_key
+            client = instructor.from_litellm(litellm.completion)
 
-        # Initialize instructor client
-        client = instructor.from_litellm(litellm.completion)
-
-        response = client.chat.completions.create(
-            model=model,
-            response_model=response_model,
-            messages=[
+        # Build kwargs for the call
+        call_kwargs = {
+            "model": model,
+            "response_model": response_model,
+            "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
-            api_base=base_url if self.provider == "local" else None, # instructor might need specific handling for base_url passing
-            # Depending on instructor version, passing api_base might be via kwargs or client init.
-            # safe fallback:
-        )
+        }
+        
+        # For local Ollama, pass api_base (LiteLLM handles Ollama natively, no /v1 needed)
+        if self.provider == "local":
+            call_kwargs["api_base"] = self.ollama_base_url
+        else:
+            call_kwargs["api_key"] = self.remote_api_key
+
+        response = client.chat.completions.create(**call_kwargs)
         
         return response
 

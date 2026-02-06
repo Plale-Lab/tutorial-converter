@@ -6,7 +6,16 @@ from pydantic import BaseModel
 from core.engine import LLMEngine
 from core.vision import VisionClient
 from database.vector_store import VectorDB
-from agents.prompts import CLEAN_PROMPT, REWRITE_KIDS_PROMPT, REWRITE_PRO_PROMPT, CRITIC_PROMPT, GLOSSARY_EXTRACT_PROMPT
+from agents.prompts import (
+    CLEAN_PROMPT, 
+    REWRITE_KIDS_PROMPT, 
+    REWRITE_HIGHSCHOOL_PROMPT,
+    REWRITE_UNDERGRAD_PROMPT,
+    REWRITE_PRO_PROMPT, 
+    REWRITE_EXECUTIVE_PROMPT,
+    CRITIC_PROMPT, 
+    GLOSSARY_EXTRACT_PROMPT
+)
 import re
 import os
 
@@ -14,7 +23,9 @@ class AgentState(TypedDict):
     raw_content: str
     cleaned_content: Optional[str]
     rewritten_content: Optional[str]
-    style: str # "kids" or "pro"
+    style: str # "kids", "highschool", "undergrad", "pro", "executive"
+    vision_strategy: Optional[str]  # "ai_gen", "hybrid", "original", "text_only"
+    custom_prompt: Optional[str]  # User's additional instructions
     critique_feedback: Optional[str]
     iteration_count: int
     glossary_terms: Optional[list]
@@ -66,16 +77,50 @@ def node_rewrite(state: AgentState):
     engine = LLMEngine()
     
     # RAG Retrieval: Get relevant terms for the content
-    # For simplicity, we just dump all extracted terms if available, or query
     glossary_context = ""
     if state.get("glossary_terms"):
         glossary_context = "\nKey Terms:\n" + "\n".join([f"- {t.get('term')}: {t.get('definition')}" for t in state["glossary_terms"]])
     
-    prompt_template = REWRITE_KIDS_PROMPT if state['style'] == "kids" else REWRITE_PRO_PROMPT
+    # Query RAG Knowledge Base for additional context
+    rag_context = ""
+    try:
+        from core.indexer import get_indexer
+        indexer = get_indexer()
+        
+        # Use first 500 chars of content as query
+        query_text = state['cleaned_content'][:500] if state.get('cleaned_content') else ""
+        if query_text:
+            rag_results = indexer.query_knowledge(query_text, n_results=3)
+            if rag_results:
+                rag_context = "\n\nRelevant Background Knowledge:\n"
+                for i, result in enumerate(rag_results):
+                    content = result.get('content', '')[:500]  # Limit each result
+                    rag_context += f"[{i+1}] {content}...\n\n"
+                print(f"--- RAG Context: {len(rag_results)} relevant chunks found ---")
+    except Exception as e:
+        print(f"RAG query failed (non-critical): {e}")
+    
+    # Select appropriate prompt based on style
+    style_prompts = {
+        "kids": REWRITE_KIDS_PROMPT,
+        "highschool": REWRITE_HIGHSCHOOL_PROMPT,
+        "undergrad": REWRITE_UNDERGRAD_PROMPT,
+        "pro": REWRITE_PRO_PROMPT,
+        "executive": REWRITE_EXECUTIVE_PROMPT,
+    }
+    prompt_template = style_prompts.get(state['style'], REWRITE_PRO_PROMPT)
     formatted_prompt = prompt_template.format(content=state['cleaned_content'])
     
     if glossary_context:
         formatted_prompt += f"\n\n{glossary_context}"
+    
+    if rag_context:
+        formatted_prompt += f"\n\n{rag_context}"
+    
+    # If user provided custom instructions, add them
+    if state.get('custom_prompt'):
+        formatted_prompt += f"\n\n**Additional User Instructions:**\n{state['custom_prompt']}"
+        print(f"--- Custom instructions added: {len(state['custom_prompt'])} chars ---")
     
     # If there's feedback, append it
     if state.get('critique_feedback'):

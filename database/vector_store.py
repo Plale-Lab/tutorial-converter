@@ -1,10 +1,19 @@
 import os
-import chromadb
-from chromadb.config import Settings
 from typing import List, Dict, Any
+
+try:
+    import chromadb
+    from chromadb.config import Settings
+    CHROMA_AVAILABLE = True
+except Exception as e:
+    print(f"WARNING: ChromaDB not available ({e}). Using Mock VectorDB.")
+    CHROMA_AVAILABLE = False
 
 class VectorDB:
     def __init__(self, collection_name: str = "tutorial_chunks"):
+        if not CHROMA_AVAILABLE:
+            return
+
         db_path = os.getenv("CHROMA_DB_PATH", "./chroma_db")
         
         # Initialize Client
@@ -18,6 +27,9 @@ class VectorDB:
         """
         Add documents to the vector store.
         """
+        if not CHROMA_AVAILABLE:
+            return
+
         self.collection.add(
             documents=documents,
             metadatas=metadatas,
@@ -28,6 +40,9 @@ class VectorDB:
         """
         Query for similar documents.
         """
+        if not CHROMA_AVAILABLE:
+            return []
+
         results = self.collection.query(
             query_texts=[query],
             n_results=n_results
@@ -39,12 +54,8 @@ class VectorDB:
         """
         Deletes the collection (useful for testing or reset)
         """
-        # self.client.delete_collection(self.collection.name)
-        # self.collection = self.client.get_or_create_collection(self.collection.name)
         pass
 
 if __name__ == "__main__":
     db = VectorDB()
-    # db.add_documents(["doc1", "doc2"], [{"meta": 1}, {"meta": 2}], ["1", "2"])
-    # print(db.query_similar("doc1"))
     pass

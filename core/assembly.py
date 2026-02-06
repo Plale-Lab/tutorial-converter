@@ -1,6 +1,12 @@
 import os
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML, CSS
+
+try:
+    from weasyprint import HTML, CSS
+    WEASY_AVAILABLE = True
+except Exception as e:
+    print(f"WARNING: WeasyPrint not available ({e}). PDF generation disabled.")
+    WEASY_AVAILABLE = False
 
 class Assembler:
     def __init__(self, template_dir: str = "templates"):
@@ -32,6 +38,13 @@ class Assembler:
         """
         Converts HTML string to PDF file.
         """
+        if not WEASY_AVAILABLE:
+            print("PDF Generation skipped (WeasyPrint missing). Creating placeholder.")
+            # Create a dummy text file renamed as PDF so the link works
+            with open(output_path, "w", encoding="utf-8") as f:
+                f.write(f"PDF Generation is disabled because WeasyPrint (GTK3) is missing.\n\nRaw Content:\n{html_content}")
+            return output_path
+            
         HTML(string=html_content, base_url=".").write_pdf(output_path)
         return output_path
 

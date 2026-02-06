@@ -1,0 +1,148 @@
+PDF Generation is disabled because WeasyPrint (GTK3) is missing.
+
+Raw Content:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Converted Tutorial</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Embedding critical CSS for PDF consistency if needed */
+        
+        /* Dynamic Style Injection */
+        
+body {
+font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+background-color: #f0f9ff;
+font-size: 18px;
+}
+h1 {
+color: #ff6b6b;
+text-align: center;
+}
+h2 {
+color: #4ecdc4;
+}
+main {
+background: white;
+padding: 40px;
+border-radius: 15px;
+box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+border: 5px solid #ffe66d;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Converted Tutorial</h1>
+    </header>
+    
+    <main>
+        <h1><strong>Harvest Tutorial</strong></h1>
+<p><strong>What You Need</strong></p>
+<p>To start using Harvest, you'll need:</p>
+<ul>
+<li>An Internet browser</li>
+<li>A trial account from us at <code>icicle_harvest@osu.edu</code></li>
+</ul>
+<p>You can find a user guide with learning time estimates <a href="http://link">here</a>.</p>
+<h3>Training Use Case</h3>
+<p>On the dashboard page, select <strong>Training</strong> and preprocess if desired. Remember, data for training jobs must be in SCRATCH.</p>
+<p>Let's break down what each setting does:</p>
+<ul>
+<li><strong>Training System and Data location:</strong> Think of this like a file explorer where you find your files on the HPC resource.<ul>
+<li>If you click "Browse," it will open a tool to help you locate your files. You can also type in the path yourself.</li>
+<li>Note: You must authenticate with Tapis for the files to show up.</li>
+</ul>
+</li>
+<li><strong>Learning Rate:</strong> Imagine adjusting a puzzle piece's position during assembly. This setting controls how often the model updates its "weights" (or pieces) while training.</li>
+<li><strong>Batch Size:</strong> Think of it like a small team working together. Set the number of examples (or tasks) they complete in one go. A smaller batch size can refine the process, but it takes longer.</li>
+<li><strong>Number of Training Epochs:</strong> An epoch is when your model completes a full pass through all training data. More epochs make the model more accurate, but might cause overfitting (like over-tightening a puzzle).</li>
+<li><strong>Number of GPUs Used:</strong> This setting is crucial for speed and resource optimization. It's like deciding how many workers to assign a task.</li>
+<li><strong>Number of Labeled Images Per Class:</strong> For semi-supervised learning, this determines the labeled images needed for each class. Think of it as providing examples for your model.</li>
+<li><strong>Training Algorithm:</strong> Choose between supervised (fully labeled data) and semi-supervised learning (combining some labeled with many unlabeled). It's like picking a strategy to solve a puzzle.</li>
+<li><strong>Base Deep Learning Model:</strong> Pick the underlying architecture, such as Transformer-based models or CNNs (like ResNet). This is where you select your "building blocks" for creating the model.</li>
+</ul>
+<p>Next, you might need to label some images if you're uploading a labeled images JSON file. This will help start the training process.</p>
+<h3>Inference Use Case</h3>
+<p>On the Dashboard page, select <strong>Inference</strong> and Preprocessing/Visualization (if needed). Note that preprocessing is required for visualization.</p>
+<p>Let's go through each setting:</p>
+<ul>
+<li><strong>Traning System and Data location:</strong> Same as in Training Use Case.</li>
+<li><strong>Inference Model Name:</strong> This is the name of your trained model from the training step. Think of it like naming a pet after you've trained it.</li>
+<li><strong>Quantization and Inference Backend:</strong> Don't worry about these unless you're an advanced user. They affect how inference happens, which can lead to reduced accuracy if changed.</li>
+</ul>
+<h3>Preprocessing</h3>
+<p>This requires three inputs:</p>
+<ol>
+<li>Image directory</li>
+<li>Shape file (directory)</li>
+<li>CSV file with drone data and GPS coordinates</li>
+</ol>
+<p>Let's do a few tasks here:</p>
+<h4>Crop Images (Data preprocessing)</h4>
+<p>Select &quot;Crop Images&quot; on the dashboard page. Remember, data for training jobs must be in SCRATCH.</p>
+<ul>
+<li><strong>Training system:</strong> Select your chosen system (e.g., pitxer-tapis or expanse).</li>
+<li><strong>Source Image Directory:</strong> Define where your images are located.</li>
+<li><strong>Destination Image Directory:</strong> Choose where you want your cropped images to go.</li>
+</ul>
+<h4>Extract frames from ARA-Harvest video stream (Data movement)</h4>
+<p>Select &quot;Extract Frames&quot; on the dashboard page.</p>
+<ul>
+<li><strong>Training system:</strong> Same as above.</li>
+<li><strong>Destination Image Directory:</strong> Specify where you want the extracted frames saved.</li>
+</ul>
+<h3>Visualization</h3>
+<p>To do this, you need to run Preprocessing and Inference steps in the same pipeline.</p>
+<h4>Object Detector</h4>
+<p>Select &quot;Object Detector&quot; on the dashboard page. Remember, data for training jobs must be in SCRATCH.</p>
+<ul>
+<li><strong>Filesystem System:</strong> Choose your system (e.g., expanse-tapis or pitzer-tapis).</li>
+<li><strong>Input Path:</strong> Find where your images are located.</li>
+<li><strong>Object Classes:</strong> Configure which classes you want to detect:<ul>
+<li>Class Name: Give a name for each class (e.g., &quot;plant&quot;, &quot;weed&quot;, &quot;crop&quot;)</li>
+<li>Search Terms: List terms that describe the objects</li>
+<li>Confidence Threshold: Set the minimum confidence score for detections</li>
+</ul>
+</li>
+</ul>
+<h4>Classifier</h4>
+<p>Select &quot;Classifier&quot; on the dashboard page. Remember, data for training jobs must be in SCRATCH.</p>
+<p>The classifier works in two steps:</p>
+<ol>
+<li><strong>Setup</strong><ul>
+<li>Filesystem System: Same as above.</li>
+<li>Input JSON Path (Object Detector Output): Path to the JSON file from object detection</li>
+<li>Input Images Directory: Where your source images are located</li>
+</ul>
+</li>
+<li>Crop Reference Patches</li>
+</ol>
+<p>For each class, you'll see a reference image. Click on it to open a cropping modal.</p>
+<p>Crop the region that best represents the class. This will be used as a template for classification.</p>
+<p>Once done, click &quot;Submit Classification Job.&quot;</p>
+<h3>Shapefile Generation</h3>
+<p>On the dashboard page, select "Shapefile Generation" if desired. Remember, data for training jobs must be in SCRATCH.</p>
+<ul>
+<li>Filesystem System: Choose your system (e.g., expanse-tapis)</li>
+<li>Result JSON file: Find the JSON file containing image information</li>
+<li>Images directory: Where your images are located</li>
+<li>Grid Configuration:<ul>
+<li>Grid Width (feet): Define the width of each polygon in the grid (default: 30 feet)</li>
+<li>Grid Height (feet): Define the height of each polygon in the grid (default: 30 feet)</li>
+</ul>
+</li>
+<li>Spray Level Configuration:</li>
+</ul>
+<p>You can choose between <strong>Binary Mode</strong> or <strong>Custom Spray Levels</strong>.</p>
+<p><img alt="A simple diagram illustrating the two modes." src="static/image_kids_0.png" /></p>
+    </main>
+    
+    <footer>
+        <p>Generated by AI Tutorial Converter</p>
+    </footer>
+</body>
+</html>
