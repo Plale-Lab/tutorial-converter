@@ -26,6 +26,7 @@ class AgentState(TypedDict):
     style: str # "kids", "highschool", "undergrad", "pro", "executive"
     vision_strategy: Optional[str]  # "ai_gen", "hybrid", "original", "text_only"
     custom_prompt: Optional[str]  # User's additional instructions
+    output_options: Optional[list]  # List of enabled output options
     critique_feedback: Optional[str]
     iteration_count: int
     glossary_terms: Optional[list]
@@ -121,6 +122,26 @@ def node_rewrite(state: AgentState):
     if state.get('custom_prompt'):
         formatted_prompt += f"\n\n**Additional User Instructions:**\n{state['custom_prompt']}"
         print(f"--- Custom instructions added: {len(state['custom_prompt'])} chars ---")
+    
+    # Add output options instructions based on enabled toggles
+    output_options = state.get('output_options', [])
+    if output_options:
+        options_instructions = "\n\n**Required Output Sections:**"
+        
+        # Define option-to-instruction mapping (maintainable registry)
+        OPTION_INSTRUCTIONS = {
+            "code_examples": "\n- Include practical code examples where applicable. Use proper syntax highlighting.",
+            "summary_table": "\n- Add a summary table at the end with key concepts and their descriptions.",
+            "key_takeaways": "\n- Include a 'Key Takeaways' section at the end with 3-5 bullet points highlighting the most important concepts.",
+            "glossary": "\n- Add a 'Glossary' section at the end defining all technical terms used in the document.",
+        }
+        
+        for option in output_options:
+            if option in OPTION_INSTRUCTIONS:
+                options_instructions += OPTION_INSTRUCTIONS[option]
+        
+        formatted_prompt += options_instructions
+        print(f"--- Output options enabled: {output_options} ---")
     
     # If there's feedback, append it
     if state.get('critique_feedback'):

@@ -42,9 +42,10 @@ def convert(request):
         style = request.POST.get('style', 'pro')
         vision_strategy = request.POST.get('vision_strategy', 'ai_gen')
         custom_prompt = request.POST.get('custom_prompt', '').strip()
+        output_options = request.POST.getlist('output_options')  # Get list of checked options
         uploaded_file = request.FILES.get('file')
         
-        logger.info(f"Received conversion request - URL: {url}, Style: {style}, Vision: {vision_strategy}, Custom Prompt: {bool(custom_prompt)}, File: {uploaded_file}")
+        logger.info(f"Received conversion request - URL: {url}, Style: {style}, Vision: {vision_strategy}, Options: {output_options}, File: {uploaded_file}")
         
         # 1. Ingestion
         try:
@@ -106,6 +107,7 @@ def convert(request):
             "style": style,
             "vision_strategy": vision_strategy,
             "custom_prompt": custom_prompt,
+            "output_options": output_options,  # List of enabled options
             "iteration_count": 0,
             "glossary_terms": [],
             "cleaned_content": "",
